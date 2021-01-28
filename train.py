@@ -1,0 +1,84 @@
+from sklearn.ensemble import RandomForestClassifier
+import argparse
+import os
+import numpy as np
+import pandas as pd
+from sklearn.metrics import mean_squared_error
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+import pandas as pd
+from azureml.core.run import Run
+from azureml.core import Workspace, Experiment
+
+def calculate_age(row):
+    pclass = row['Pclass']
+    parch = row['Parch']
+    sibsp = row['SibSp']
+    age = row['Age']
+    if pd.isnull(age) :
+        age_median = train['Age'].median()
+        similar_age = train[(train['Pclass'] == pclass) & (train['Parch'] == parch) & (train['SibSp'] == sibsp)]['Age'].median()
+        if (similar_age > 0) : return similar_age
+        else : return age_median
+    else : return age 
+    
+
+def clean_data(data):
+    # Dict for cleaning data
+    y_train = data['Survived']
+    x_train = data.drop('Survived', axis=1)
+    x_train['Age'] = x_train.apply(calculate_age, axis=1)
+    x_train['Embarked'] = x_train['Embarked'].fillna(x_train['Embarked'].mode().loc[0])
+    x_train["FamilySize"] = x_train["SibSp"] + x_train["Parch"]  
+    x_train["IsAlone"] = 1
+    x_train.loc[x_train["FamilySize"] > 0, "IsAlone"] = 0 
+    x_train['Fare'] = x_train['Fare'].fillna(x_test['Fare'].median())
+    x_train.drop(['Name','Ticket','Cabin'], axis=1, inplace=True)
+    
+    return pd.get_dummies(x_train), y_train
+
+### Retrieve dataset ###
+ws = Workspace.from_config()
+
+found = False
+key = "titanic.csv" #check
+description_text = "Titanic survival classification data from Kaggle"
+
+if key in ws.datasets.keys(): 
+        found = True
+        dataset = ws.datasets[key] 
+
+x, y = clean_data(dataset)
+
+### Train and evaluate ###
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42)
+
+run = Run.get_context()
+
+def main():
+    # Add arguments to script
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--n_estimators', type=float, default=100.0, help="number of trees in the forest")
+    parser.add_argument('--max_depth', type=int, default=5, help="maximum depth of the tree")
+    parser.add_argument('--min_samples_split', type=int, default=2, help="minimum number of samples required to split an internal node")
+    parser.add_argument('--random_state', type=int, default=1, help="controls both the randomness of the bootstrapping of the samples used when building trees and the sampling of the features to consider when looking for the best split at each node")
+
+    args = parser.parse_args()
+
+    run.log("N-estimators:", np.float(args.n_estimators))
+    run.log("Max depth:", np.int(args.max_depth))
+    run.log("Min_samples_split:", np.int(args.min_samples_split))
+    run.log("Random state:", np.int(args.random_state))
+
+    model = RandomForestClassifier(n_estimators=args.n_estimators, max_depth=args.max_depth, min_samples_split = args.min_samples_split, random_state=args.random_state).fit(x_train, y_train)
+    
+    accuracy = model.score(x_test, y_test)
+    run.log("Accuracy", np.float(accuracy))
+    
+    os.makedirs('./outputs', exist_ok=True)
+    joblib.dump(value=model, filename='./outputs/model.joblib')
+
+if __name__ == '__main__':
+    main()
