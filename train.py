@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
+from sklearn import datasets
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
@@ -11,29 +12,16 @@ import pandas as pd
 from azureml.core.run import Run
 from azureml.core import Workspace, Experiment
 
-def calculate_age(row):
-    pclass = row['Pclass']
-    parch = row['Parch']
-    sibsp = row['SibSp']
-    age = row['Age']
-    if pd.isnull(age) :
-        age_median = train['Age'].median()
-        similar_age = train[(train['Pclass'] == pclass) & (train['Parch'] == parch) & (train['SibSp'] == sibsp)]['Age'].median()
-        if (similar_age > 0) : return similar_age
-        else : return age_median
-    else : return age 
-    
-
 def clean_data(data):
     # Dict for cleaning data
     y_train = data['Survived']
     x_train = data.drop('Survived', axis=1)
-    x_train['Age'] = x_train.apply(calculate_age, axis=1)
+    x_train['Age'] = x_train.fillna(x_train['Age'].mean())
     x_train['Embarked'] = x_train['Embarked'].fillna(x_train['Embarked'].mode().loc[0])
     x_train["FamilySize"] = x_train["SibSp"] + x_train["Parch"]  
     x_train["IsAlone"] = 1
     x_train.loc[x_train["FamilySize"] > 0, "IsAlone"] = 0 
-    x_train['Fare'] = x_train['Fare'].fillna(x_test['Fare'].median())
+    x_train['Fare'] = x_train['Fare'].fillna(x_train['Fare'].median())
     x_train.drop(['Name','Ticket','Cabin'], axis=1, inplace=True)
     
     return pd.get_dummies(x_train), y_train
@@ -42,14 +30,16 @@ def clean_data(data):
 ws = Workspace.from_config()
 
 found = False
-key = "titanic.csv" #check
+key = "titanic" 
 description_text = "Titanic survival classification data from Kaggle"
 
 if key in ws.datasets.keys(): 
         found = True
-        dataset = ws.datasets[key] 
+        df = ws.datasets[key] 
+else :
+    df = pd.read_csv("./titanic.csv")
 
-x, y = clean_data(dataset)
+x, y = clean_data(df.to_pandas_dataframe())
 
 ### Train and evaluate ###
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42)
