@@ -11,23 +11,26 @@ from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 from azureml.core.run import Run
 from azureml.core import Workspace, Experiment
+from azureml.core.run import Run
 
 def clean_data(data):
-    # Dict for cleaning data
+    # Cleaning the data to work well, 
     y_train = data['Survived']
     x_train = data.drop('Survived', axis=1)
     x_train['Age'] = x_train.fillna(x_train['Age'].mean())
-    x_train['Embarked'] = x_train['Embarked'].fillna(x_train['Embarked'].mode().loc[0])
     x_train["FamilySize"] = x_train["SibSp"] + x_train["Parch"]  
     x_train["IsAlone"] = 1
     x_train.loc[x_train["FamilySize"] > 0, "IsAlone"] = 0 
     x_train['Fare'] = x_train['Fare'].fillna(x_train['Fare'].median())
-    x_train.drop(['Name','Ticket','Cabin'], axis=1, inplace=True)
+    dict_sex = {"male":0, "female":1}
+    x_train['Sex']=df['Sex'].map(dict_sex)
+    x_train.drop(['Name','Ticket','Cabin', 'Embarked'], axis=1, inplace=True)
     
-    return pd.get_dummies(x_train), y_train
+    return x_train, y_train
 
 ### Retrieve dataset ###
-ws = Workspace.from_config()
+run = Run.get_context()
+ws = run.experiment.workspace
 
 found = False
 key = "titanic" 
@@ -50,7 +53,7 @@ def main():
     # Add arguments to script
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--n_estimators', type=float, default=100.0, help="number of trees in the forest")
+    parser.add_argument('--n_estimators', type=int, default=100.0, help="number of trees in the forest")
     parser.add_argument('--max_depth', type=int, default=5, help="maximum depth of the tree")
     parser.add_argument('--min_samples_split', type=int, default=2, help="minimum number of samples required to split an internal node")
     parser.add_argument('--random_state', type=int, default=1, help="controls both the randomness of the bootstrapping of the samples used when building trees and the sampling of the features to consider when looking for the best split at each node")
