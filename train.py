@@ -29,20 +29,23 @@ def clean_data(data):
     return x_train, y_train
 
 ### Retrieve dataset ###
-run = Run.get_context()
-ws = run.experiment.workspace
 
-found = False
-key = "titanic" 
-description_text = "Titanic survival classification data from Kaggle"
+try :
+    df = pd.read_csv("./titanic.csv")
+except Exception:
+    run = Run.get_context()
+    ws = run.experiment.workspace
 
-if key in ws.datasets.keys(): 
+    found = False
+    key = "titanic" 
+    description_text = "Titanic survival classification data from Kaggle"
+
+    if key in ws.datasets.keys(): 
         found = True
         df = ws.datasets[key] 
-else :
-    df = pd.read_csv("./titanic.csv")
+        df = df.to_pandas_dataframe()
 
-x, y = clean_data(df.to_pandas_dataframe())
+x, y = clean_data(df)
 
 ### Train and evaluate ###
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42)
