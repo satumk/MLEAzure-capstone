@@ -1,17 +1,15 @@
-from sklearn.ensemble import RandomForestClassifier
-import argparse
-import os
-import numpy as np
-import pandas as pd
-from sklearn.metrics import mean_squared_error
-from sklearn import datasets
-import joblib
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-import pandas as pd
-from azureml.core.run import Run
-from azureml.core import Workspace, Experiment
-from azureml.core.run import Run
+from sklearn.ensemble import RandomForestClassifier 
+import argparse 
+import os 
+import numpy as np 
+# from sklearn.metrics import mean_squared_error
+# from sklearn import datasets
+import joblib 
+from sklearn.model_selection import train_test_split 
+# from sklearn.preprocessing import OneHotEncoder
+import pandas as pd 
+from azureml.core.run import Run 
+from azureml.core import Workspace, Experiment 
 
 def clean_data(data):
     # Cleaning the data to work well, 
