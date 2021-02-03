@@ -2,11 +2,12 @@ from sklearn.ensemble import RandomForestClassifier
 import argparse 
 import os 
 import numpy as np 
-# from sklearn.metrics import mean_squared_error
-# from sklearn import datasets
+from sklearn.metrics import mean_squared_error #
+from sklearn.metrics import roc_auc_score
+from sklearn import datasets #
 import joblib 
 from sklearn.model_selection import train_test_split 
-# from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder #
 import pandas as pd 
 from azureml.core.run import Run 
 from azureml.core import Workspace, Experiment 
@@ -70,6 +71,9 @@ def main():
     
     accuracy = model.score(x_test, y_test)
     run.log("Accuracy", np.float(accuracy))
+
+    #score = roc_auc_score(y_test, model.predict_proba(x_test, y_test)[:, 1])
+    #run.log("AUC", no.float(score))
     
     os.makedirs('./outputs', exist_ok=True)
     joblib.dump(value=model, filename='./outputs/model.joblib')
