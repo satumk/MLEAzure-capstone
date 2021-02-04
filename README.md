@@ -91,7 +91,12 @@ I deployed this as a ACI webservice and enabled logging to be able to see any is
 To use this endpoint, once the project runs and the best model is deployed, one needs data in the shape seen below.
 ![data for endpoint](/screenshots/data_for_endpoint.png)
 
+Then one needs the rest-api address beginning with http:// as seen below cell 76 of automl.ipynb. This api will be different when this project is run as the api URI is created when the service is deployed and the current one has been deleted. So the address needs to be copied to cell 80 where there is a variable scoring_uri. Then it is possible to run that cell and use the endpoint to get a prediction. It is also possible to copy the contents of cell 80 to a script and run a prediction from bash/terminal. In that case the endpoint URI will also need to be copied to the script. In that case, please also copy all necessary imports from the first cell in the notebook as some libraries will need to be imported for the cell 80 script to work.
+
 For a demonstration of the working of this project and endpoint, please see the video in the link below.
+
+Here's a screenshot of the endpoint being healthy and working.
+![healthy endpoint](/screenshots/deployed_healthy_endpoint.png)
 
 ## Screen Recording
 A video-demonstration of the project can be found here on youtube: https://youtu.be/M1EXbkMelDc
