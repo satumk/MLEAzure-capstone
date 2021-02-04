@@ -104,4 +104,5 @@ All work can be improved upon and all improvements are further learning. However
 4. Create an environment specifically for this project.
 
 ## Standout Suggestions
-I enabled logging
+I enabled logging. This enables me to see, what is happening in the service. As seen below, one can see the requests, their type and time. Logs also show any errors.
+![logs](/screenshots/logs.png)
